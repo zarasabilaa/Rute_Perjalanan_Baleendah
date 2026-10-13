@@ -1,19 +1,23 @@
+
 import {
-  createMap,
-  addGeoJSON,
-  fitMap,
-  onMapClick
+    createMap,
+    addGeoJSON,
+    fitMap,
+    onMapClick
 } from "https://cdn.jsdelivr.net/gh/crootjs/lib@0.0.16/map.js";
 
 import {
-  getGeoJSON
+    getGeoJSON
 } from "https://cdn.jsdelivr.net/gh/crootjs/lib@0.0.16/geo.js";
 
 import {
-  findRoute
+    findRoute
 } from "https://cdn.jsdelivr.net/gh/crootjs/lib@0.0.16/georoute.js";
 
-// Elemen HTML
+// ========================================
+// 1. ELEMEN HTML
+// ========================================
+
 const elAwal = document.getElementById("titik-awal");
 const elTujuan = document.getElementById("titik-tujuan");
 const elJarak = document.getElementById("jarak");
@@ -21,7 +25,24 @@ const elTarif = document.getElementById("tarif");
 const elPesan = document.getElementById("pesan");
 const btnReset = document.getElementById("reset-rute");
 
-// Konfigurasi aplikasi
+// Pastikan ID elemen HTML sesuai
+if (
+    !elAwal ||
+    !elTujuan ||
+    !elJarak ||
+    !elTarif ||
+    !elPesan ||
+    !btnReset
+) {
+    throw new Error(
+        "Elemen HTML tidak ditemukan. Periksa ID di index.html."
+    );
+}
+
+// ========================================
+// 2. KONFIGURASI APLIKASI
+// ========================================
+
 const TARIF_SIMULASI = 10000;
 const ID_PETA = "map";
 
@@ -29,22 +50,28 @@ let dataJalan = null;
 let titikAwal = null;
 let titikTujuan = null;
 
+let hapusLapisanJalan = null;
 let hapusLapisanAwal = null;
 let hapusLapisanTujuan = null;
 let hapusLapisanRute = null;
 
-// Membuat peta
+// ========================================
+// 3. MEMBUAT PETA
+// ========================================
+
 createMap(ID_PETA, {
     center: [107.62087, -6.99996],
     zoom: 14
 });
 
-// Menampilkan status
+// ========================================
+// 4. FUNGSI BANTU
+// ========================================
+
 function tampilkanPesan(teks) {
     elPesan.textContent = teks;
 }
 
-// Mengubah koordinat menjadi teks
 function formatKoordinat(posisi) {
     if (!posisi) {
         return "Belum dipilih";
@@ -55,19 +82,20 @@ function formatKoordinat(posisi) {
     return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
 }
 
-// Menampilkan tarif simulasi
 function tampilkanTarif() {
     elTarif.textContent =
         "Rp" + TARIF_SIMULASI.toLocaleString("id-ID");
 }
 
-// Memperbarui informasi titik
 function perbaruiTitik() {
     elAwal.textContent = formatKoordinat(titikAwal);
     elTujuan.textContent = formatKoordinat(titikTujuan);
 }
 
-// Menghapus lapisan marker dan rute sebelumnya
+// ========================================
+// 5. MENGHAPUS LAPISAN
+// ========================================
+
 function hapusLapisanPilihan() {
     if (hapusLapisanAwal) {
         hapusLapisanAwal();
@@ -79,13 +107,9 @@ function hapusLapisanPilihan() {
         hapusLapisanTujuan = null;
     }
 
-    if (hapusLapisanRute) {
-        hapusLapisanRute();
-        hapusLapisanRute = null;
-    }
+    hapusRuteSaja();
 }
 
-// Menghapus satu lapisan rute
 function hapusRuteSaja() {
     if (hapusLapisanRute) {
         hapusLapisanRute();
@@ -93,7 +117,10 @@ function hapusRuteSaja() {
     }
 }
 
-// Menggambar marker titik awal
+// ========================================
+// 6. MENGGAMBAR TITIK AWAL
+// ========================================
+
 function gambarTitikAwal() {
     hapusLapisanAwal = addGeoJSON(
         ID_PETA,
@@ -119,7 +146,10 @@ function gambarTitikAwal() {
     );
 }
 
-// Menggambar marker tujuan
+// ========================================
+// 7. MENGGAMBAR TITIK TUJUAN
+// ========================================
+
 function gambarTitikTujuan() {
     hapusLapisanTujuan = addGeoJSON(
         ID_PETA,
@@ -145,7 +175,10 @@ function gambarTitikTujuan() {
     );
 }
 
-// Menghitung rute terpendek pada jaringan jalan
+// ========================================
+// 8. MENGHITUNG RUTE TERPENDEK
+// ========================================
+
 function hitungRute() {
     if (!titikAwal || !titikTujuan || !dataJalan) {
         return;
@@ -166,54 +199,90 @@ function hitungRute() {
             elJarak.textContent = "-";
 
             tampilkanPesan(
-                "Rute tidak ditemukan. Data jalan mungkin tidak saling terhubung."
+                "Rute tidak ditemukan. Periksa apakah ruas jalan saling terhubung."
+            );
+
+            console.warn(
+                "Rute tidak ditemukan. Periksa konektivitas koordinat GeoJSON."
             );
 
             return;
         }
 
-        // Gambar garis rute di atas peta
+        console.log("GeoJSON rute hasil perhitungan:", rute);
+
         hapusLapisanRute = addGeoJSON(
             ID_PETA,
             rute,
             {
                 style: {
                     stroke: "#2563eb",
-                    strokeWidth: 6,
-                    strokeOpacity: 1
+                    strokeWidth: 7,
+                    strokeOpacity: 1,
+                    fillOpacity: 0
                 },
                 popup: "Rute perjalanan"
             }
         );
 
-        // distance dari CrootJS dinyatakan dalam meter
-        const jarakMeter = rute.properties.distance;
+        const jarakMeter = rute.properties?.distance;
+
+        if (
+            typeof jarakMeter !== "number" ||
+            !Number.isFinite(jarakMeter)
+        ) {
+            elJarak.textContent = "-";
+
+            tampilkanPesan(
+                "Rute terbentuk, tetapi informasi jarak tidak tersedia."
+            );
+
+            console.warn(
+                "Properti distance tidak ditemukan pada hasil rute."
+            );
+
+            return;
+        }
+
         const jarakKm = jarakMeter / 1000;
 
         elJarak.textContent = `${jarakKm.toFixed(2)} km`;
         tampilkanTarif();
 
         tampilkanPesan(
-            "Rute berhasil ditemukan. Tarif Rp10.000 adalah tarif simulasi."
+            "Rute berhasil ditemukan. Tarif Rp10.000 merupakan tarif simulasi."
         );
 
-        console.log("GeoJSON rute:", rute);
-        console.log("Jarak rute (meter):", jarakMeter);
+        console.log("Jarak rute:", jarakMeter, "meter");
     } catch (error) {
         console.error("Gagal menghitung rute:", error);
 
         elJarak.textContent = "-";
 
         tampilkanPesan(
-            "Terjadi kesalahan saat menghitung rute. Periksa console browser."
+            "Gagal menghitung rute. Periksa pesan error di Console."
         );
     }
 }
 
-// Memilih titik melalui klik peta
+// ========================================
+// 9. MEMILIH TITIK DI PETA
+// ========================================
+
 function pilihTitik(posisi) {
-    // Klik pertama atau klik ketiga dan seterusnya
-    // memulai pasangan titik yang baru.
+    if (
+        !Array.isArray(posisi) ||
+        posisi.length < 2 ||
+        !Number.isFinite(posisi[0]) ||
+        !Number.isFinite(posisi[1])
+    ) {
+        console.warn("Koordinat klik peta tidak valid:", posisi);
+        tampilkanPesan("Koordinat titik tidak valid.");
+        return;
+    }
+
+    // Klik pertama memulai pilihan baru.
+    // Setelah tujuan dipilih, klik berikutnya juga memulai ulang.
     if (!titikAwal || titikTujuan) {
         hapusLapisanPilihan();
 
@@ -226,13 +295,13 @@ function pilihTitik(posisi) {
         perbaruiTitik();
 
         tampilkanPesan(
-            "Titik awal dipilih. Klik peta sekali lagi untuk memilih tujuan."
+            "Titik awal dipilih. Klik peta lagi untuk memilih tujuan."
         );
 
         return;
     }
 
-    // Klik kedua menetapkan tujuan
+    // Klik kedua menentukan titik tujuan.
     titikTujuan = posisi;
 
     gambarTitikTujuan();
@@ -240,7 +309,10 @@ function pilihTitik(posisi) {
     hitungRute();
 }
 
-// Reset agar pengguna dapat memilih rute baru
+// ========================================
+// 10. RESET PILIHAN RUTE
+// ========================================
+
 function resetRute() {
     hapusLapisanPilihan();
 
@@ -252,73 +324,168 @@ function resetRute() {
     perbaruiTitik();
     tampilkanTarif();
 
-    tampilkanPesan("Pilih titik awal pada peta.");
+    tampilkanPesan(
+        "Pilih titik awal pada peta."
+    );
 }
 
-// Muat GeoJSON jalan dari folder proyek
+// ========================================
+// 11. MEMUAT DATA JALAN GEOJSON
+// ========================================
+
 function muatJalan() {
     tampilkanPesan("Memuat data jalan Baleendah...");
 
-    getGeoJSON("./jalan.geojson", (response) => {
-        if (!response.data) {
-            console.error(
-                "Gagal memuat GeoJSON. Status:",
-                response.status
+    console.log("Mulai memuat ./jalan.geojson");
+
+    try {
+        getGeoJSON("./jalan.geojson", (response) => {
+            console.log("Respons pemuatan GeoJSON:", response);
+
+            if (!response || !response.data) {
+                console.error(
+                    "GeoJSON gagal dimuat:",
+                    response
+                );
+
+                tampilkanPesan(
+                    "Data jalan gagal dimuat. Periksa lokasi file dan Console."
+                );
+
+                return;
+            }
+
+            const geojson = response.data;
+
+            if (
+                geojson.type !== "FeatureCollection" ||
+                !Array.isArray(geojson.features)
+            ) {
+                console.error(
+                    "Format GeoJSON harus berupa FeatureCollection:",
+                    geojson
+                );
+
+                tampilkanPesan(
+                    "Format jalan.geojson tidak sesuai."
+                );
+
+                return;
+            }
+
+            if (geojson.features.length === 0) {
+                console.error("GeoJSON tidak memiliki fitur.");
+
+                tampilkanPesan(
+                    "File GeoJSON berhasil dibaca, tetapi tidak berisi fitur."
+                );
+
+                return;
+            }
+
+            dataJalan = geojson;
+
+            console.log(
+                "Jumlah fitur GeoJSON:",
+                dataJalan.features.length
             );
+
+            console.table(
+                dataJalan.features.map((fitur, index) => ({
+                    index,
+                    nama:
+                        fitur.properties?.name ||
+                        fitur.properties?.nama ||
+                        fitur.properties?.highway ||
+                        "Tanpa nama",
+                    geometri: fitur.geometry?.type,
+                    jumlahKoordinat:
+                        fitur.geometry?.coordinates?.length ?? 0
+                }))
+            );
+
+            // Tampilkan semua ruas jalan dengan warna merah
+            // untuk memastikan garis benar-benar tergambar.
+            try {
+                hapusLapisanJalan = addGeoJSON(
+                    ID_PETA,
+                    dataJalan,
+                    {
+                        style: {
+                            stroke: "#ff0000",
+                            strokeWidth: 6,
+                            strokeOpacity: 1,
+                            fillOpacity: 0,
+                            radius: 5
+                        },
+                        popup: (feature) => {
+                            const properti = feature.properties || {};
+
+                            return (
+                                properti.name ||
+                                properti.nama ||
+                                properti.highway ||
+                                "Ruas jalan"
+                            );
+                        }
+                    }
+                );
+
+                console.log(
+                    "Lapisan jalan berhasil ditambahkan ke peta."
+                );
+            } catch (error) {
+                console.error(
+                    "Gagal menggambar GeoJSON jalan:",
+                    error
+                );
+
+                tampilkanPesan(
+                    "GeoJSON terbaca, tetapi gagal digambar. Periksa Console."
+                );
+
+                return;
+            }
+
+            // Sesuaikan area peta dengan data jalan.
+            try {
+                fitMap(ID_PETA, dataJalan);
+            } catch (error) {
+                console.error(
+                    "Gagal menyesuaikan tampilan peta:",
+                    error
+                );
+            }
+
+            // Aktifkan klik peta untuk memilih titik.
+            onMapClick(ID_PETA, (posisi) => {
+                console.log("Koordinat yang diklik:", posisi);
+                pilihTitik(posisi);
+            });
 
             tampilkanPesan(
-                "Data jalan gagal dimuat. Periksa nama file, URL, dan koneksi."
+                `Data jalan siap (${dataJalan.features.length} fitur). Klik peta untuk memilih titik awal.`
             );
-
-            return;
-        }
-
-        dataJalan = response.data;
-
-        const jumlahFitur = dataJalan.features.length;
-
-        console.log("GeoJSON berhasil dimuat:", dataJalan);
-        console.log("Jumlah fitur jalan:", jumlahFitur);
-
-        addGeoJSON(
-            ID_PETA,
-            dataJalan,
-            {
-                style: {
-                    stroke: "#64748b",
-                    strokeWidth: 3,
-                    strokeOpacity: 0.9
-                },
-                popup: (feature) => {
-                    const properti = feature.properties || {};
-
-                    return (
-                        properti.name ||
-                        properti.nama ||
-                        properti.highway ||
-                        "Ruas jalan"
-                    );
-                }
-            }
-        );
-
-        fitMap(ID_PETA, dataJalan);
-
-        // Aktifkan pemilihan titik setelah data siap
-        onMapClick(ID_PETA, (posisi) => {
-            pilihTitik(posisi);
         });
+    } catch (error) {
+        console.error("Kesalahan saat memuat GeoJSON:", error);
 
         tampilkanPesan(
-            `Data jalan siap (${jumlahFitur} fitur). Klik peta untuk memilih titik awal.`
+            "Terjadi kesalahan saat memuat data jalan. Periksa Console."
         );
-    });
+    }
 }
 
-// Event tombol reset
+// ========================================
+// 12. EVENT TOMBOL RESET
+// ========================================
+
 btnReset.addEventListener("click", resetRute);
 
-// Inisialisasi tampilan
+// ========================================
+// 13. INISIALISASI APLIKASI
+// ========================================
+
 perbaruiTitik();
 tampilkanTarif();
 muatJalan();
