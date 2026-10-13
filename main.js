@@ -1,16 +1,16 @@
 import {
-    createMap,
-    addGeoJSON,
-    fitMap,
-    onMapClick
+  createMap,
+  addGeoJSON,
+  fitMap,
+  onMapClick
 } from "https://cdn.jsdelivr.net/gh/crootjs/lib@0.0.16/map.js";
 
 import {
-    getGeoJSON
+  getGeoJSON
 } from "https://cdn.jsdelivr.net/gh/crootjs/lib@0.0.16/geo.js";
 
 import {
-    findRoute
+  findRoute
 } from "https://cdn.jsdelivr.net/gh/crootjs/lib@0.0.16/georoute.js";
 
 // Elemen HTML
