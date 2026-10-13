@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulasi pencarian rute jalan di Baleendah menggunakan CrootJS dan GeoJSON.">
+
+    <title>Simulasi Rute - Baleendah</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="main.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <span class="eyebrow">GEOSPATIAL WEB PROJECT</span>
+            <h1>Simulasi Rute</h1>
+            <p>Baleendah, Kabupaten Bandung</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="panel">
+            <h2>Rencanakan perjalanan</h2>
+            <p class="description">
+                Klik peta untuk memilih titik awal, lalu klik lagi
+                untuk memilih tujuan.
+            </p>
+
+            <div class="location-card">
+                <span class="dot dot-start"></span>
+                <div>
+                    <span class="field-label">Titik awal</span>
+                    <strong id="titik-awal">Belum dipilih</strong>
+                </div>
+            </div>
+
+            <div class="location-card">
+                <span class="dot dot-end"></span>
+                <div>
+                    <span class="field-label">Titik tujuan</span>
+                    <strong id="titik-tujuan">Belum dipilih</strong>
+                </div>
+            </div>
+
+            <div class="summary">
+                <div>
+                    <span class="field-label">Jarak rute</span>
+                    <strong id="jarak">-</strong>
+                </div>
+                <div>
+                    <span class="field-label">Tarif simulasi</span>
+                    <strong id="tarif">Rp10.000</strong>
+                </div>
+            </div>
+
+            <button id="reset-rute" type="button">
+                Reset rute
+            </button>
+
+            <p id="pesan" class="status" role="status" aria-live="polite">
+                Memuat data jalan...
+            </p>
+        </section>
+
+        <section class="map-panel">
+            <div class="map-heading">
+                <div>
+                    <h2>Peta jalan</h2>
+                    <p>Pilih dua titik pada peta</p>
+                </div>
+                <span class="map-tag">CrootJS</span>
+            </div>
+            <div id="map" aria-label="Peta interaktif Baleendah"></div>
+            <p class="attribution-note">
+                Peta dasar © OpenStreetMap contributors.
+                Rute dihitung dari data GeoJSON yang disediakan.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Proyek pembelajaran geospasial · Tarif hanya simulasi.</p>
+    </footer>
+</body>
+</html>
